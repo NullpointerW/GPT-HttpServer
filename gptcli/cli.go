@@ -16,7 +16,7 @@ type Token struct {
 }
 
 var (
-	apiKey       = "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"
+	apiKey       = "???"
 	Cli          = newCli()
 	TokenManager = sync.Map{}
 )
@@ -56,7 +56,7 @@ func newCli() *openai.Client {
 	}
 	config.HTTPClient = &http.Client{
 		Transport: transport,
-		Timeout:   30 * time.Second,
+		Timeout:   1 * time.Minute,
 	}
 	return openai.NewClientWithConfig(config)
 }

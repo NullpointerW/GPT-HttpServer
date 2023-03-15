@@ -20,7 +20,7 @@ type request struct {
 }
 
 type response struct {
-	TokenRequire string `json:"tokenRequire"`
+	TokenRequire string `json:"tokenRequire,omitempty"`
 	Asw          string `json:"asw"`
 }
 
@@ -31,8 +31,9 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	jsRaw, _ := io.ReadAll(req.Body)
+	fmt.Println(string(jsRaw))
 	reqParam := &request{}
-	err := json.Unmarshal(jsRaw, req)
+	err := json.Unmarshal(jsRaw, reqParam)
 	if err != nil {
 		log.Println(err)
 	}
@@ -41,7 +42,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		apiParam := []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
-				Content: "you are a teacher",
+				Content: "以下我的所有问题，你必须先核实问题是否与建筑施工质量安全领域相关，如果不相关，请不要回答",
 			},
 			{
 				Role:    openai.ChatMessageRoleUser,
@@ -59,20 +60,26 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			_, _ = fmt.Fprintf(w, "ChatCompletion error: %v\n", err)
 			return
 		}
+		apiParam=append(apiParam,openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleAssistant,
+				Content: resp.Choices[0].Message.Content,
+			})
 		gptcli.TokenManager.Store(uuidTk, &gptcli.Token{
 			Context:  apiParam,
 			LastTime: time.Now(),
 		})
 		httpresp := response{
 			Asw:          resp.Choices[0].Message.Content,
-			TokenRequire: uuidTk}
+			TokenRequire: uuidTk,
+		}
 		jsonRaw, _ := json.Marshal(httpresp)
 		w.WriteHeader(200)
 		_, _ = fmt.Fprintf(w, "%s", jsonRaw)
-	
+
 	} else {
 		if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
 			t := v.(*gptcli.Token)
+			fmt.Printf("token is %v",t)
 			tctx := append(t.Context, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleUser,
 				Content: reqParam.Message,
@@ -88,9 +95,13 @@ func Do(w http.ResponseWriter, req *http.Request) {
 				_, _ = fmt.Fprintf(w, "ChatCompletion error: %v\n", err)
 				return
 			}
+			tctx=append(tctx, openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleAssistant,
+				Content: resp.Choices[0].Message.Content,
+			})
 			t.Context = tctx
 			//更新token时间
-			t.LastTime=time.Now()
+			t.LastTime = time.Now()
 			httpresp := response{
 				Asw: resp.Choices[0].Message.Content,
 			}
@@ -100,8 +111,8 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		} else {
 			//token 不存在
 			log.Println("invalid token")
-			w.WriteHeader(500)
-			_, _ = fmt.Fprintf(w, "invalid token \"%s\"",reqParam.Token )
+			w.WriteHeader(401)
+			_, _ = fmt.Fprintf(w, "invalid token \"%s\"", reqParam.Token)
 		}
 	}
 

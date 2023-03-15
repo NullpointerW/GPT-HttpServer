@@ -17,7 +17,7 @@ func TestApi(t *testing.T) {
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: "you are a teacher",
+					Content: "以下我的所有问题，你必须先核实问题是否与建筑施工质量安全领域相关，如果不相关，请不要回答",
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,

@@ -1,3 +1,5 @@
 {
-    "git.useEditorAsCommitInput": false
+    "git.useEditorAsCommitInput": false,
+    "editor.fontFamily": "JetBrains Mono, 'Courier New', monospace",
+    "editor.fontSize": 15
 }
