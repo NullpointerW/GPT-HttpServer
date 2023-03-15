@@ -1,12 +1,13 @@
 package gptcli
 
 import (
-	"github.com/sashabaranov/go-openai"
 	"log"
 	"net/http"
 	"net/url"
 	"sync"
 	"time"
+
+	"github.com/sashabaranov/go-openai"
 )
 
 type Token struct {
@@ -15,9 +16,9 @@ type Token struct {
 }
 
 var (
-	apiKey   = "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"
-	Cli      = newCli()
-	TokenMap = sync.Map{}
+	apiKey       = "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"
+	Cli          = newCli()
+	TokenManager = sync.Map{}
 )
 
 func tokensCleaner(d time.Duration) {
@@ -25,13 +26,13 @@ func tokensCleaner(d time.Duration) {
 clean:
 	its := func(k, v interface{}) bool {
 		tk := v.(*Token)
-		if time.Now().Sub(tk.LastTime) >= d {
-			TokenMap.Delete(k)
+		if time.Since(tk.LastTime)>= d {
+			TokenManager.Delete(k)
 			log.Printf("clean token %s", k.(string))
 		}
 		return true
 	}
-	TokenMap.Range(its)
+	TokenManager.Range(its)
 
 	for {
 		time.Sleep(d)
