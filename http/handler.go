@@ -55,7 +55,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			Model:    openai.GPT3Dot5Turbo,
 			Messages: apiParam,
 		}
-		resp, err := gptcli.Cli.CreateChatCompletion(context.Background(), apiRequest)
+		resp, err := gptcli.Cli().CreateChatCompletion(context.Background(), apiRequest)
 		if err != nil {
 			log.Printf("ChatCompletion error: %v\n", err)
 			w.WriteHeader(500)
@@ -92,7 +92,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 				Model:    openai.GPT3Dot5Turbo,
 				Messages: tctx,
 			}
-			resp, err := gptcli.Cli.CreateChatCompletion(context.Background(), apiRequest)
+			resp, err := gptcli.Cli().CreateChatCompletion(context.Background(), apiRequest)
 			if err != nil {
 				log.Printf("ChatCompletion error: %v\n", err)
 				w.WriteHeader(500)
@@ -123,5 +123,19 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 		}
 	}
+
+}
+
+func SwitchApikey(w http.ResponseWriter, req *http.Request) {
+	auth := req.Header.Get("x-auth")
+	if auth == cfg.Cfg.SecretKey {
+		apikey := req.URL.Query().Get("apikey")
+		gptcli.SwitchCliWithApiKey(apikey)
+		w.WriteHeader(200)
+		_, _ = fmt.Fprintf(w, "%s", "ok")
+		return
+	}
+	w.WriteHeader(401)
+	_, _ = fmt.Fprintf(w, "invalid SecretKey")
 
 }

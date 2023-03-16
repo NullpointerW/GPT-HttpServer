@@ -16,6 +16,7 @@ type Config struct {
 	Timeout          int    `json:"timeout"`
 	CharacterSetting string `json:"characterSetting"`
 	TokenTTL         int    `json:"tokenTTL"`
+	SecretKey        string `json:"secretKey"`
 }
 
 func loadConfigure() *Config {

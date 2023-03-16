@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/sashabaranov/go-openai"
@@ -17,10 +18,13 @@ type Token struct {
 }
 
 var (
-	apiKey       = cfg.Cfg.Apikey
-	Cli          = newCli()
+	client       = newCli()
 	TokenManager = sync.Map{}
 )
+
+func Cli() *openai.Client {
+	return client.Load()
+}
 
 func tokensCleaner(d time.Duration) {
 sleep:
@@ -46,9 +50,9 @@ func init() {
 	go tokensCleaner(time.Second * time.Duration(cfg.Cfg.TokenTTL))
 }
 
-func newCli() *openai.Client {
-
-	config := openai.DefaultConfig(apiKey)
+func newCli() *atomic.Pointer[openai.Client] {
+	cli := &atomic.Pointer[openai.Client]{}
+	config := openai.DefaultConfig(cfg.Cfg.Apikey)
 	transport := &http.Transport{}
 	if cfg.Cfg.Proxy != "" {
 		proxyUrl, err := url.Parse("http://" + cfg.Cfg.Proxy)
@@ -61,5 +65,23 @@ func newCli() *openai.Client {
 		Transport: transport,
 		Timeout:   time.Duration(cfg.Cfg.Timeout) * time.Second,
 	}
-	return openai.NewClientWithConfig(config)
+	cli.Store(openai.NewClientWithConfig(config))
+	return cli
+}
+
+func SwitchCliWithApiKey(k string) {
+	config := openai.DefaultConfig(k)
+	transport := &http.Transport{}
+	if cfg.Cfg.Proxy != "" {
+		proxyUrl, err := url.Parse("http://" + cfg.Cfg.Proxy)
+		if err != nil {
+			panic(err)
+		}
+		transport.Proxy = http.ProxyURL(proxyUrl)
+	}
+	config.HTTPClient = &http.Client{
+		Transport: transport,
+		Timeout:   time.Duration(cfg.Cfg.Timeout) * time.Second,
+	}
+	client.Store(openai.NewClientWithConfig(config))
 }
