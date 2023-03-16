@@ -1,0 +1,6 @@
+{
+  "port": 8080,
+  "characterSetting": "以下我的每一个问题，只要与建设工程质量安全不相关的，涉及政治伦理道德的都不予作答，且不进行任何检索和补充，听明白了么",
+  "apikey": "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",
+  "proxy": "192.168.1.110:7890"
+}

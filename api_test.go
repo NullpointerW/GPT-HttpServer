@@ -10,7 +10,7 @@ import (
 )
 
 func TestApi(t *testing.T) {
-       	resp, err := gptcli.Cli.CreateChatCompletion(
+	resp, err := gptcli.Cli.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
 			Model: openai.GPT3Dot5Turbo,

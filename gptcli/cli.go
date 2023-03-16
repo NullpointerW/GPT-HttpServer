@@ -1,6 +1,7 @@
 package gptcli
 
 import (
+	"gpt3.5/cfg"
 	"log"
 	"net/http"
 	"net/url"
@@ -16,47 +17,49 @@ type Token struct {
 }
 
 var (
-	apiKey       = "???"
+	apiKey       = cfg.Cfg.Apikey
 	Cli          = newCli()
 	TokenManager = sync.Map{}
 )
 
 func tokensCleaner(d time.Duration) {
-	log.Println("token cleaner start")
+sleep:
+	for {
+		time.Sleep(d)
+		goto clean
+	}
 clean:
+	log.Println("token cleaner start")
 	its := func(k, v interface{}) bool {
 		tk := v.(*Token)
-		if time.Since(tk.LastTime)>= d {
+		if time.Since(tk.LastTime) >= d {
 			TokenManager.Delete(k)
 			log.Printf("clean token %s", k.(string))
 		}
 		return true
 	}
 	TokenManager.Range(its)
-
-	for {
-		time.Sleep(d)
-		goto clean
-	}
+	goto sleep
 }
 func init() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Lmicroseconds)
-	go tokensCleaner(time.Minute * 30)
+	go tokensCleaner(time.Second * time.Duration(cfg.Cfg.TokenTTL))
 }
 
 func newCli() *openai.Client {
 
 	config := openai.DefaultConfig(apiKey)
-	proxyUrl, err := url.Parse("http://localhost:7890")
-	if err != nil {
-		panic(err)
-	}
-	transport := &http.Transport{
-		Proxy: http.ProxyURL(proxyUrl),
+	transport := &http.Transport{}
+	if cfg.Cfg.Proxy != "" {
+		proxyUrl, err := url.Parse("http://" + cfg.Cfg.Proxy)
+		if err != nil {
+			panic(err)
+		}
+		transport.Proxy = http.ProxyURL(proxyUrl)
 	}
 	config.HTTPClient = &http.Client{
 		Transport: transport,
-		Timeout:   1 * time.Minute,
+		Timeout:   time.Duration(cfg.Cfg.Timeout) * time.Second,
 	}
 	return openai.NewClientWithConfig(config)
 }

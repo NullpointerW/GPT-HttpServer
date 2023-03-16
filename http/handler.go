@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gpt3.5/cfg"
 	"io"
 	"log"
 	"net/http"
@@ -21,7 +22,8 @@ type request struct {
 
 type response struct {
 	TokenRequire string `json:"tokenRequire,omitempty"`
-	Asw          string `json:"asw"`
+	Asw          string `json:"asw,omitempty"`
+	Err          string `json:"error,omitempty"`
 }
 
 func Do(w http.ResponseWriter, req *http.Request) {
@@ -42,7 +44,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		apiParam := []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
-				Content: "以下我的所有问题，你必须先核实问题是否与建筑施工质量安全领域相关，如果不相关，请不要回答",
+				Content: cfg.Cfg.CharacterSetting,
 			},
 			{
 				Role:    openai.ChatMessageRoleUser,
@@ -57,13 +59,15 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Printf("ChatCompletion error: %v\n", err)
 			w.WriteHeader(500)
-			_, _ = fmt.Fprintf(w, "ChatCompletion error: %v\n", err)
+			serr := fmt.Sprintf("ChatCompletion error: %v", err)
+			jsonRaw, _ := json.Marshal(response{Err: serr})
+			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 			return
 		}
-		apiParam=append(apiParam,openai.ChatCompletionMessage{
-				Role:    openai.ChatMessageRoleAssistant,
-				Content: resp.Choices[0].Message.Content,
-			})
+		apiParam = append(apiParam, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleAssistant,
+			Content: resp.Choices[0].Message.Content,
+		})
 		gptcli.TokenManager.Store(uuidTk, &gptcli.Token{
 			Context:  apiParam,
 			LastTime: time.Now(),
@@ -79,7 +83,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 	} else {
 		if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
 			t := v.(*gptcli.Token)
-			fmt.Printf("token is %v",t)
+			fmt.Printf("token is %v", t)
 			tctx := append(t.Context, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleUser,
 				Content: reqParam.Message,
@@ -92,10 +96,12 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				log.Printf("ChatCompletion error: %v\n", err)
 				w.WriteHeader(500)
-				_, _ = fmt.Fprintf(w, "ChatCompletion error: %v\n", err)
+				serr := fmt.Sprintf("ChatCompletion error: %v", err)
+				jsonRaw, _ := json.Marshal(response{Err: serr})
+				_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 				return
 			}
-			tctx=append(tctx, openai.ChatCompletionMessage{
+			tctx = append(tctx, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleAssistant,
 				Content: resp.Choices[0].Message.Content,
 			})
@@ -112,7 +118,9 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			//token 不存在
 			log.Println("invalid token")
 			w.WriteHeader(401)
-			_, _ = fmt.Fprintf(w, "invalid token \"%s\"", reqParam.Token)
+			serr := fmt.Sprintf("invalid token:\"%s\"", reqParam.Token)
+			jsonRaw, _ := json.Marshal(response{Err: serr})
+			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 		}
 	}
 
