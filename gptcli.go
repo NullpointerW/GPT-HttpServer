@@ -10,7 +10,7 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	mux.Handle("/chat/do", http.HandlerFunc(gptHttp.Do))
+	mux.Handle("/v1/chat/do", http.HandlerFunc(gptHttp.Do))
 	mux.Handle("/cfg/modifyKey", http.HandlerFunc(gptHttp.SwitchApikey))
 	log.Printf("starting http-srv on port[%d]", cfg.Cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(cfg.Cfg.Port), mux))

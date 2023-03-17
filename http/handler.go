@@ -24,6 +24,7 @@ type response struct {
 	TokenRequire string `json:"tokenRequire,omitempty"`
 	Asw          string `json:"asw,omitempty"`
 	Err          string `json:"error,omitempty"`
+	ErrCode      string `json:"errCode,omitempty"`
 }
 
 func Do(w http.ResponseWriter, req *http.Request) {
@@ -51,6 +52,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 				Content: reqParam.Message,
 			},
 		}
+		fmt.Printf("%+v", apiParam)
 		apiRequest := openai.ChatCompletionRequest{
 			Model:    openai.GPT3Dot5Turbo,
 			Messages: apiParam,
@@ -59,8 +61,8 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Printf("ChatCompletion error: %v\n", err)
 			w.WriteHeader(500)
-			serr := fmt.Sprintf("ChatCompletion error: %v", err)
-			jsonRaw, _ := json.Marshal(response{Err: serr})
+			sErr := fmt.Sprintf("ChatCompletion error: %v", err)
+			jsonRaw, _ := json.Marshal(response{Err: sErr})
 			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 			return
 		}
@@ -72,54 +74,54 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			Context:  apiParam,
 			LastTime: time.Now(),
 		})
-		httpresp := response{
+		httpResp := response{
 			Asw:          resp.Choices[0].Message.Content,
 			TokenRequire: uuidTk,
 		}
-		jsonRaw, _ := json.Marshal(httpresp)
+		jsonRaw, _ := json.Marshal(httpResp)
 		w.WriteHeader(200)
 		_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 
 	} else {
 		if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
 			t := v.(*gptcli.Token)
-			fmt.Printf("token is %v", t)
-			tctx := append(t.Context, openai.ChatCompletionMessage{
+			fmt.Printf("token is %+v", t)
+			tCtx := append(t.Context, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleUser,
 				Content: reqParam.Message,
 			})
 			apiRequest := openai.ChatCompletionRequest{
 				Model:    openai.GPT3Dot5Turbo,
-				Messages: tctx,
+				Messages: tCtx,
 			}
 			resp, err := gptcli.Cli().CreateChatCompletion(context.Background(), apiRequest)
 			if err != nil {
 				log.Printf("ChatCompletion error: %v\n", err)
 				w.WriteHeader(500)
-				serr := fmt.Sprintf("ChatCompletion error: %v", err)
-				jsonRaw, _ := json.Marshal(response{Err: serr})
+				sErr := fmt.Sprintf("ChatCompletion error: %v", err)
+				jsonRaw, _ := json.Marshal(response{Err: sErr, ErrCode: "500"})
 				_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 				return
 			}
-			tctx = append(tctx, openai.ChatCompletionMessage{
+			tCtx = append(tCtx, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleAssistant,
 				Content: resp.Choices[0].Message.Content,
 			})
-			t.Context = tctx
+			t.Context = tCtx
 			//更新token时间
 			t.LastTime = time.Now()
-			httpresp := response{
+			httpResp := response{
 				Asw: resp.Choices[0].Message.Content,
 			}
-			jsonRaw, _ := json.Marshal(httpresp)
+			jsonRaw, _ := json.Marshal(httpResp)
 			w.WriteHeader(200)
 			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 		} else {
 			//token 不存在
 			log.Println("invalid token")
 			w.WriteHeader(401)
-			serr := fmt.Sprintf("invalid token:\"%s\"", reqParam.Token)
-			jsonRaw, _ := json.Marshal(response{Err: serr})
+			sErr := fmt.Sprintf("invalid token:\"%s\"", reqParam.Token)
+			jsonRaw, _ := json.Marshal(response{Err: sErr, ErrCode: "401"})
 			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 		}
 	}
@@ -137,5 +139,4 @@ func SwitchApikey(w http.ResponseWriter, req *http.Request) {
 	}
 	w.WriteHeader(401)
 	_, _ = fmt.Fprintf(w, "invalid SecretKey")
-
 }
