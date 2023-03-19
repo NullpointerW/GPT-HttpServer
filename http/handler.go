@@ -78,6 +78,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			Asw:          resp.Choices[0].Message.Content,
 			TokenRequire: uuidTk,
 		}
+		fmt.Printf("%+v",resp)
 		jsonRaw, _ := json.Marshal(httpResp)
 		w.WriteHeader(200)
 		_, _ = fmt.Fprintf(w, "%s", jsonRaw)
@@ -113,6 +114,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			httpResp := response{
 				Asw: resp.Choices[0].Message.Content,
 			}
+			fmt.Printf("%+v",resp)
 			jsonRaw, _ := json.Marshal(httpResp)
 			w.WriteHeader(200)
 			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
@@ -125,7 +127,6 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
 		}
 	}
-
 }
 
 func SwitchApikey(w http.ResponseWriter, req *http.Request) {
@@ -140,3 +141,6 @@ func SwitchApikey(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(401)
 	_, _ = fmt.Fprintf(w, "invalid SecretKey")
 }
+
+
+

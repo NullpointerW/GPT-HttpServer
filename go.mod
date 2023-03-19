@@ -3,7 +3,7 @@ module gpt3.5
 go 1.19
 
 require (
-	github.com/NullpointerW/golwpush v0.0.1-demo
+	// github.com/NullpointerW/golwpush v0.0.1-demo
 	github.com/sashabaranov/go-openai v1.5.1
 	github.com/satori/go.uuid v1.2.0
 )

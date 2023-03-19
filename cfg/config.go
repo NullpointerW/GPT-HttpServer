@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 var Cfg = loadConfigure()
@@ -19,6 +20,17 @@ type Config struct {
 	SecretKey        string `json:"secretKey"`
 }
 
+func (cfg Config) GoString() string {
+	return "{Apikey:" + cfg.Apikey+"\n"+
+	"Prox:"+cfg.Proxy+"\n"+
+	"Port:"+strconv.Itoa(cfg.Port)+"\n"+
+	"Timeout:"+strconv.Itoa(cfg.Timeout)+"\n"+
+	"CharacterSetting:"+cfg.CharacterSetting+"\n"+
+	"TokenTTL:"+strconv.Itoa(cfg.TokenTTL)+"\n"+
+	"SecretKey:"+cfg.SecretKey+"\n"+"}"
+}
+
+
 func loadConfigure() *Config {
 	raw, err := os.ReadFile("./setting.json")
 	if err != nil {
@@ -32,6 +44,6 @@ func loadConfigure() *Config {
 	if err != nil {
 		log.Panicf("Parsing JSON failed %s:", err)
 	}
-	fmt.Printf("configure:\n%+v\n", *config)
+	fmt.Printf("configure:\n%+#v\n", *config)
 	return config
 }
