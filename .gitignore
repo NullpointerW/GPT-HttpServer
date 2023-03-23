@@ -1,4 +1,5 @@
-/.idea/
+.idea
 *.iml
- /.vscode
-/.setting.json
+.vscode
+setting.json
+

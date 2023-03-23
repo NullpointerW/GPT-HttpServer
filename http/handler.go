@@ -16,8 +16,8 @@ import (
 )
 
 type request struct {
-	Token   string `json:"token"`
-	Message string `json:"message"`
+	Token   string `json:"token" form:"token"`
+	Message string `json:"message" form:"message"`
 }
 
 type response struct {
@@ -58,6 +58,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			Messages: apiParam,
 		}
 		resp, err := gptcli.Cli().CreateChatCompletion(context.Background(), apiRequest)
+		
 		if err != nil {
 			log.Printf("ChatCompletion error: %v\n", err)
 			w.WriteHeader(500)
@@ -78,7 +79,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			Asw:          resp.Choices[0].Message.Content,
 			TokenRequire: uuidTk,
 		}
-		fmt.Printf("%+v",resp)
+		// fmt.Printf("%+v",resp)
 		jsonRaw, _ := json.Marshal(httpResp)
 		w.WriteHeader(200)
 		_, _ = fmt.Fprintf(w, "%s", jsonRaw)
@@ -86,7 +87,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 	} else {
 		if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
 			t := v.(*gptcli.Token)
-			fmt.Printf("token is %+v", t)
+			// fmt.Printf("token is %+v", t)
 			tCtx := append(t.Context, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleUser,
 				Content: reqParam.Message,
@@ -114,7 +115,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			httpResp := response{
 				Asw: resp.Choices[0].Message.Content,
 			}
-			fmt.Printf("%+v",resp)
+			// fmt.Printf("%+v",resp)
 			jsonRaw, _ := json.Marshal(httpResp)
 			w.WriteHeader(200)
 			_, _ = fmt.Fprintf(w, "%s", jsonRaw)
