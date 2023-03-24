@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	// "github.com/go-playground/locales/lg"
 	"github.com/sashabaranov/go-openai"
+	uuid "github.com/satori/go.uuid"
 	"gpt3.5/cfg"
 	"gpt3.5/gptcli"
 )
@@ -25,12 +26,110 @@ func SetupRouter() *gin.Engine {
 		})
 	})
 
-	r.GET("/stream", func(c *gin.Context) {
-
+	r.POST("/v1/chat/do", func(c *gin.Context) {
 		var reqParam request
 		err := c.ShouldBindQuery(&reqParam)
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Println(err.Error())
+			return
+		}
+		if reqParam.Token == "" {
+			uuidTk := uuid.NewV4().String()
+			apiParam := []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: cfg.Cfg.CharacterSetting,
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: reqParam.Message,
+				},
+			}
+			fmt.Printf("%+v", apiParam)
+			apiRequest := openai.ChatCompletionRequest{
+				Model:    openai.GPT3Dot5Turbo,
+				Messages: apiParam,
+			}
+			resp, err := gptcli.Cli().CreateChatCompletion(context.Background(), apiRequest)
+
+			if err != nil {
+				log.Printf("ChatCompletion error: %v\n", err)
+				sErr := fmt.Sprintf("ChatCompletion error: %v", err)
+				c.JSON(500, response{Err: sErr})
+				return
+			}
+			apiParam = append(apiParam, openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleAssistant,
+				Content: resp.Choices[0].Message.Content,
+			})
+			gptcli.TokenManager.Store(uuidTk, &gptcli.Token{
+				Context:  apiParam,
+				LastTime: time.Now(),
+			})
+			httpResp := response{
+				Asw:          resp.Choices[0].Message.Content,
+				TokenRequire: uuidTk,
+			}
+			c.JSON(200, httpResp)
+		} else {
+			if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
+				t := v.(*gptcli.Token)
+				// fmt.Printf("token is %+v", t)
+				tCtx := append(t.Context, openai.ChatCompletionMessage{
+					Role:    openai.ChatMessageRoleUser,
+					Content: reqParam.Message,
+				})
+				apiRequest := openai.ChatCompletionRequest{
+					Model:    openai.GPT3Dot5Turbo,
+					Messages: tCtx,
+				}
+				resp, err := gptcli.Cli().CreateChatCompletion(context.Background(), apiRequest)
+				if err != nil {
+					log.Printf("ChatCompletion error: %v\n", err)
+					sErr := fmt.Sprintf("ChatCompletion error: %v", err)
+					c.JSON(500, response{Err: sErr, ErrCode: "500"})
+					return
+				}
+				tCtx = append(tCtx, openai.ChatCompletionMessage{
+					Role:    openai.ChatMessageRoleAssistant,
+					Content: resp.Choices[0].Message.Content,
+				})
+				t.Context = tCtx
+				//更新token时间
+				t.LastTime = time.Now()
+				httpResp := response{
+					Asw: resp.Choices[0].Message.Content,
+				}
+				// fmt.Printf("%+v",resp)
+				c.JSON(200, httpResp)
+			} else {
+				//token 不存在
+				log.Println("invalid token")
+				sErr := fmt.Sprintf("invalid token:\"%s\"", reqParam.Token)
+				c.JSON(401, response{Err: sErr, ErrCode: "401"})
+			}
+		}
+	})
+
+	r.GET("/cfg/modkey", func(c *gin.Context) {
+         auth:= c.Request.Header.Get("x-auth")
+		  if auth == cfg.Cfg.SecretKey {
+			apikey := c.Query("apikey")
+			gptcli.SwitchCliWithApiKey(apikey)
+			c.String(200,"ok")
+			return
+		}
+		c.String(401,"invalid SecretKey")
+	})
+
+	
+
+	r.GET("/stream", func(c *gin.Context) {
+		var reqParam request
+		err := c.ShouldBindQuery(&reqParam)
+		if err != nil {
+			log.Println(err.Error())
+			return
 		}
 
 		fmt.Printf("reqpram is%#v \n", reqParam)
@@ -41,7 +140,7 @@ func SetupRouter() *gin.Engine {
 			idx := 0
 			len := len(msg)
 			c.Stream(func(w io.Writer) bool {
-				time.Sleep(100*time.Nanosecond)
+				time.Sleep(100 * time.Nanosecond)
 				c.SSEvent("message", string(msg[idx]))
 				if idx >= len-1 {
 					return false
@@ -65,8 +164,7 @@ func SetupRouter() *gin.Engine {
 				Model:    openai.GPT3Dot5Turbo,
 				Messages: tCtx,
 			}
-			ok, err, asw := SSEventProcess(c, req)
-			if err != nil {
+			if ok, asw, err := SSEventProcess(c, req); err != nil {
 				log.Println(err)
 			} else if ok {
 				tCtx = append(tCtx, asw)
@@ -92,8 +190,7 @@ func SetupRouter() *gin.Engine {
 				//token
 				Messages: newCtx,
 			}
-			ok, err, asw := SSEventProcess(c, req)
-			if err != nil {
+			if ok, asw, err := SSEventProcess(c, req); err != nil {
 				log.Println(err)
 			} else if ok {
 				newCtx = append(newCtx, asw)
@@ -110,10 +207,10 @@ func SetupRouter() *gin.Engine {
 	return r
 }
 
-func SSEventProcess(c *gin.Context, req openai.ChatCompletionRequest) (bool, error, openai.ChatCompletionMessage) {
+func SSEventProcess(c *gin.Context, req openai.ChatCompletionRequest) (bool, openai.ChatCompletionMessage, error) {
 	stream, err := gptcli.Cli().CreateChatCompletionStream(context.Background(), req)
 	if err != nil {
-		return false, err, openai.ChatCompletionMessage{}
+		return false, openai.ChatCompletionMessage{}, err
 	}
 	chanStream := make(chan string, 100)
 	go func() {
@@ -142,8 +239,10 @@ func SSEventProcess(c *gin.Context, req openai.ChatCompletionRequest) (bool, err
 			fmt.Printf("Stream response: %s\n", data)
 		}
 	}()
-	var sendOk = true
-	var aswMsg = ""
+	var (
+		sendOk = true
+		aswMsg = ""
+	)
 	c.Stream(func(w io.Writer) bool {
 		if msg, ok := <-chanStream; ok {
 			if msg == "<!finish>" {
@@ -156,13 +255,13 @@ func SSEventProcess(c *gin.Context, req openai.ChatCompletionRequest) (bool, err
 			}
 			c.SSEvent("message", msg)
 			aswMsg = aswMsg + msg
-			fmt.Printf("message: %v\n", msg)
+			// fmt.Printf("message: %v\n", msg)
 			return true
 		}
 		return false
 	})
-	return sendOk, nil, openai.ChatCompletionMessage{
+	return sendOk, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleAssistant,
 		Content: aswMsg,
-	}
+	}, nil
 }

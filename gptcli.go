@@ -15,7 +15,7 @@ import (
 
 func main() {
 	log.Printf("http service listens on port [%d]", cfg.Cfg.Port)
-     ginSrv(strconv.Itoa(cfg.Cfg.Port))
+    ginSrv(strconv.Itoa(cfg.Cfg.Port))
 	// mux := http.NewServeMux()
 	// mux.Handle("/v1/chat/do", http.HandlerFunc(gptHttp.Do))
 	// mux.Handle("/cfg/modifyKey", http.HandlerFunc(gptHttp.SwitchApikey))

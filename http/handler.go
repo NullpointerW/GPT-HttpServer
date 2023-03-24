@@ -26,7 +26,7 @@ type response struct {
 	Err          string `json:"error,omitempty"`
 	ErrCode      string `json:"errCode,omitempty"`
 }
-
+// Deprecated:impl via gin
 func Do(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
 		w.WriteHeader(405)
@@ -129,7 +129,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 }
-
+// Deprecated: impl via gin
 func SwitchApikey(w http.ResponseWriter, req *http.Request) {
 	auth := req.Header.Get("x-auth")
 	if auth == cfg.Cfg.SecretKey {

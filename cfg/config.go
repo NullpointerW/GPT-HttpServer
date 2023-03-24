@@ -22,7 +22,7 @@ type Config struct {
 
 func (cfg Config) GoString() string {
 	return "{Apikey:" + cfg.Apikey+"\n"+
-	"Prox:"+cfg.Proxy+"\n"+
+	"Proxy:"+cfg.Proxy+"\n"+
 	"Port:"+strconv.Itoa(cfg.Port)+"\n"+
 	"Timeout:"+strconv.Itoa(cfg.Timeout)+"\n"+
 	"CharacterSetting:"+cfg.CharacterSetting+"\n"+
