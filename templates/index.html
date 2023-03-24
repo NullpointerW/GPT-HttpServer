@@ -1,54 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+<title>test</title>
 </head>
 <body>
-<div id="result">
-
-</div>
-
-<div>
-    <input type="text" id="msg">
-    <button type="button" onclick="submit()">提交!</button>
-</div>
+test ....
 </body>
 <script>
-    class Chat {
-        constructor(q, a) {
-            this.q = q;
-            this.a = a;
-        }
-    }
-
-    const chats = [];
-
-    function submit() {
-        let question = document.getElementById("msg").value
-        if (question === undefined || question === "") {
-            alert("please input question")
-        }
-        const chat = new Chat();
-        chat.q = question;
-        chat.a = "";
-        const stream = new EventSource("/stream?message=" + chat.q+"&token=ava12312123adadd1")
-        stream.addEventListener("message", function (e) {
-            chat.a += e.data
-            document.getElementById("result").innerHTML = chat.a
-        });
-        stream.addEventListener("stop", function (e) {
-            stream.close()
-            chat.a += "\n"
-            chats.push(chat)
-            document.getElementById("result").innerHTML = chat.a
-            console.log(e)
-        });
-        stream.onerror = function (event) {
-            stream.close()
-            console.log(event)
-        }
-    }
-
+var ws = new WebSocket("ws://localhost:8080/ws?message=8964&token=sgva12311");  
+//连接打开时触发 
+ws.onopen = function(evt) {  
+    console.log("Connection open ...");  
+    ws.send("Hello WebSockets!");  
+};  
+//接收到消息时触发  
+ws.onmessage = function(evt) {  
+    console.log("Received Message: " + evt.data);  
+};  
+//连接关闭时触发  
+ws.onclose = function(evt) {  
+    console.log("Connection closed.");  
+};  
 </script>
-</html>
+</body>

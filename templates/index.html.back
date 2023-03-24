@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="result">
+
+</div>
+
+<div>
+    <input type="text" id="msg">
+    <button type="button" onclick="submit()">提交!</button>
+</div>
+</body>
+<script>
+    class Chat {
+        constructor(q, a) {
+            this.q = q;
+            this.a = a;
+        }
+    }
+
+    const chats = [];
+
+    function submit() {
+        let question = document.getElementById("msg").value
+        if (question === undefined || question === "") {
+            alert("please input question")
+        }
+        const chat = new Chat();
+        chat.q = question;
+        chat.a = "";
+        const stream = new EventSource("/stream?message=" + chat.q+"&token=ava12312123adadd1")
+        stream.addEventListener("message", function (e) {
+            chat.a += e.data
+            document.getElementById("result").innerHTML = chat.a
+        });
+        stream.addEventListener("stop", function (e) {
+            stream.close()
+            chat.a += "\n"
+            chats.push(chat)
+            document.getElementById("result").innerHTML = chat.a
+            console.log(e)
+        });
+        stream.onerror = function (event) {
+            stream.close()
+            console.log(event)
+        }
+    }
+
+</script>
+</html>
