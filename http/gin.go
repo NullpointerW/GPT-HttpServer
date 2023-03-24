@@ -28,8 +28,7 @@ func SetupRouter() *gin.Engine {
 
 	r.POST("/v1/chat/do", func(c *gin.Context) {
 		var reqParam request
-		err := c.ShouldBindQuery(&reqParam)
-		if err != nil {
+		if err := c.ShouldBindJSON(&reqParam); err != nil {
 			log.Println(err.Error())
 			return
 		}
@@ -112,17 +111,15 @@ func SetupRouter() *gin.Engine {
 	})
 
 	r.GET("/cfg/modkey", func(c *gin.Context) {
-         auth:= c.Request.Header.Get("x-auth")
-		  if auth == cfg.Cfg.SecretKey {
+		auth := c.Request.Header.Get("x-auth")
+		if auth == cfg.Cfg.SecretKey {
 			apikey := c.Query("apikey")
 			gptcli.SwitchCliWithApiKey(apikey)
-			c.String(200,"ok")
+			c.String(200, "ok")
 			return
 		}
-		c.String(401,"invalid SecretKey")
+		c.String(401, "invalid SecretKey")
 	})
-
-	
 
 	r.GET("/stream", func(c *gin.Context) {
 		var reqParam request

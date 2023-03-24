@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gpt3.5/cfg"
 	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"gpt3.5/cfg"
 
 	"github.com/sashabaranov/go-openai"
 	uuid "github.com/satori/go.uuid"
@@ -16,8 +17,8 @@ import (
 )
 
 type request struct {
-	Token   string `json:"token" form:"token"`
-	Message string `json:"message" form:"message"`
+	Token   string `json:"token" uri:"token" form:"token"`
+	Message string `json:"message"  uri:"token" form:"message"`
 }
 
 type response struct {
@@ -26,6 +27,7 @@ type response struct {
 	Err          string `json:"error,omitempty"`
 	ErrCode      string `json:"errCode,omitempty"`
 }
+
 // Deprecated:impl via gin
 func Do(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
@@ -58,7 +60,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			Messages: apiParam,
 		}
 		resp, err := gptcli.Cli().CreateChatCompletion(context.Background(), apiRequest)
-		
+
 		if err != nil {
 			log.Printf("ChatCompletion error: %v\n", err)
 			w.WriteHeader(500)
@@ -129,6 +131,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 }
+
 // Deprecated: impl via gin
 func SwitchApikey(w http.ResponseWriter, req *http.Request) {
 	auth := req.Header.Get("x-auth")
@@ -142,6 +145,3 @@ func SwitchApikey(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(401)
 	_, _ = fmt.Fprintf(w, "invalid SecretKey")
 }
-
-
-
