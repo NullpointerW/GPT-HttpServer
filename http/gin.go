@@ -46,7 +46,7 @@ func SetupRouter() *gin.Engine {
 
 		if reqParam.Token == "" {
 			//为了逐字显示
-			msg := []rune("未获取到token,请检查token设置!")
+			msg := "未获取到token,请检查token设置!"
 			for _, ruc := range msg {
 				time.Sleep(100 * time.Nanosecond)
 				ws.WriteMessage(websocket.TextMessage, []byte(string(ruc)))
