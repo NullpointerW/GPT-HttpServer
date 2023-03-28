@@ -24,6 +24,20 @@
     <script>
       hljs.initHighlightingOnLoad();
     </script>
+
+    <script>
+      MathJax = {
+        // 仅仅为标志符，表示在这个符号中间的内容为公式内容，官方文档多了['(',')']
+        tex: { inlineMath: [["$", "$"]] },
+      };
+    </script>
+
+    <script
+      id="MathJax-script"
+      async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
+    ></script>
+
     <!-- <script src="https://unpkg.com/jquery@3.6.2/dist/jquery.min.js"></script> -->
     <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/event-source-polyfill/0.0.9/eventsource.min.js"></script>
@@ -125,7 +139,6 @@
     </div>
 
     <script>
-      const url = new URL(window.location.href);
       const chatbox = $("#chatbox");
       const userInput = $("#userInput");
       const sendButton = $("#sendButton");
@@ -200,7 +213,7 @@
             };
             ws.onmessage = function (e) {
               message += e.data;
-              let rendererMD = new marked.Renderer()
+              let rendererMD = new marked.Renderer();
               marked.setOptions({
                 renderer: rendererMD,
                 gfm: true,
@@ -215,6 +228,7 @@
                 },
               });
               $("#" + aswid).html("A: " + marked.parse(message));
+              MathJax.typeset();
             };
             ws.onclose = function (e) {
               console.log(e);
