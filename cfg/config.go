@@ -21,15 +21,14 @@ type Config struct {
 }
 
 func (cfg Config) GoString() string {
-	return "Apikey:" + cfg.Apikey+"\n"+
-	"Proxy:"+cfg.Proxy+"\n"+
-	"Port:"+strconv.Itoa(cfg.Port)+"\n"+
-	"Timeout:"+strconv.Itoa(cfg.Timeout)+"\n"+
-	"CharacterSetting:"+cfg.CharacterSetting+"\n"+
-	"TokenTTL:"+strconv.Itoa(cfg.TokenTTL)+"\n"+
-	"SecretKey:"+cfg.SecretKey+"\n"
+	return "Apikey:" + cfg.Apikey + "\n" +
+		"Proxy:" + cfg.Proxy + "\n" +
+		"Port:" + strconv.Itoa(cfg.Port) + "\n" +
+		"Timeout:" + strconv.Itoa(cfg.Timeout) + "\n" +
+		"CharacterSetting:" + cfg.CharacterSetting + "\n" +
+		"TokenTTL:" + strconv.Itoa(cfg.TokenTTL) + "\n" +
+		"SecretKey:" + cfg.SecretKey + "\n"
 }
-
 
 func loadConfigure() *Config {
 	raw, err := os.ReadFile("./setting.json")

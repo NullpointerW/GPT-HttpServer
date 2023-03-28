@@ -1,24 +1,294 @@
-<html>
-<head>
-<title>test</title>
-</head>
-<body>
-test ....
-</body>
-<script>
-var ws = new WebSocket("ws://localhost:8080/ws?message=8964&token=sgva12311");  
-//连接打开时触发 
-ws.onopen = function(evt) {  
-    console.log("Connection open ...");  
-    ws.send("Hello WebSockets!");  
-};  
-//接收到消息时触发  
-ws.onmessage = function(evt) {  
-    console.log("Received Message: " + evt.data);  
-};  
-//连接关闭时触发  
-ws.onclose = function(evt) {  
-    console.log("Connection closed.");  
-};  
-</script>
-</body>
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8" />
+    <title>Chatgpt</title>
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/mdui@1.0.2/dist/css/mdui.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css"
+    />
+    <!--代码块高亮插件-->
+    <link
+      href="http://cdn.bootcss.com/highlight.js/8.0/styles/monokai_sublime.min.css"
+      rel="stylesheet"
+    />
+    <script src="http://cdn.bootcss.com/highlight.js/8.0/highlight.min.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <!-- <script src="https://unpkg.com/jquery@3.6.2/dist/jquery.min.js"></script> -->
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/event-source-polyfill/0.0.9/eventsource.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/mdui@1.0.2/dist/js/mdui.min.js"></script>
+    <style>
+      .language-javascript.hljs {
+        /*不加这个的话代码块过宽会被截取掉一部分*/
+        overflow-x: auto;
+      }
+
+      .markdown-body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+      }
+
+      @media (max-width: 767px) {
+        .markdown-body {
+          padding: 15px;
+        }
+      }
+      body {
+        font-family: system-ui, -apple-system, "Microsoft YaHei", Segoe UI,
+          Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif !important;
+      }
+
+      body {
+        background-color: #ffffff;
+        margin: 0;
+      }
+
+      .question {
+        color: #1e3b7a;
+        font-size: 1em;
+      }
+
+      .answer {
+        color: #000000;
+        font-size: 1em;
+        background-color: #f5f5f5;
+      }
+
+      .errormessage {
+        color: #b32142;
+      }
+
+      #chatbox {
+        overflow-y: auto;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+
+  <body
+    class="mdui-appbar-with-toolbar mdui-bottom-nav-fixed mdui-theme-primary-indigo mdui-theme-accent-indigo mdui-color-grey-50"
+    style="padding-bottom: 280px"
+  >
+    <!-- 头部展示 -->
+    <div
+      class="mdui-appbar mdui-appbar-fixed mdui-valign"
+      style="background-color: #1e3b7a"
+    >
+      <h1 class="mdui-center" style="color: #fff">Chatgpt</h1>
+    </div>
+    <!-- 对话展示 -->
+    <div class="mdui-container">
+      <div id="chatbox" class="mdui-p-a-1 mdui-m-t-3 mdui-row"></div>
+    </div>
+    <!-- 底部固定 -->
+    <div
+      class="mdui-bottom-nav mdui-container-fluid"
+      style="
+        height: auto;
+        flex-direction: column;
+        background-color: rgb(56, 56, 56);
+      "
+    >
+      <div class="mdui-container">
+        <textarea
+          id="userInput"
+          class="mdui-textfield-input mdui-m-y-1 mdui-p-a-1 mdui-row mdui-color-grey-50"
+          style="border-radius: 4px"
+          type="text"
+          rows="5"
+          placeholder="在这里输入问题...换行请按Ctrl+Enter"
+          autofocus
+        ></textarea>
+        <input
+          id="sendButton"
+          type="button"
+          value="询问"
+          class="mdui-btn mdui-btn-raised mdui-btn-block mdui-color-indigo mdui-row mdui-m-b-1"
+          style="height: 50px"
+        />
+      </div>
+    </div>
+
+    <script>
+      const url = new URL(window.location.href);
+      const chatbox = $("#chatbox");
+      const userInput = $("#userInput");
+      const sendButton = $("#sendButton");
+      var golab_time = 0;
+      const usr_token = getUuid();
+
+      $(document).ready(function () {
+        const messages = [];
+        sendButton.on("click", () => {
+          const message = userInput.val();
+          if (message) {
+            messages.push({
+              role: "user",
+              content: message,
+            });
+            chatbox.append(
+              `<div class="question mdui-p-a-1 mdui-typo">Q: ${message}</div>`
+            );
+            userInput.val("");
+            sendButton.val("询问中...");
+            sendButton.prop("disabled", true);
+            fetchMessages(message);
+          }
+        });
+
+        userInput.on("keydown", (event) => {
+          if (event.keyCode === 13 && !event.ctrlKey && !event.shiftKey) {
+            // Enter key without Ctrl key
+            event.preventDefault();
+            sendButton.click();
+          } else if (
+            event.keyCode === 13 &&
+            (event.ctrlKey || event.shiftKey)
+          ) {
+            // Enter key with Ctrl key
+            event.preventDefault();
+            const cursorPosition = userInput.prop("selectionStart");
+            const currentValue = userInput.val();
+            userInput.val(
+              currentValue.slice(0, cursorPosition) +
+                "\n" +
+                currentValue.slice(cursorPosition)
+            );
+            // Set the cursor position after the new line character
+            userInput.prop("selectionStart", cursorPosition + 1);
+            userInput.prop("selectionEnd", cursorPosition + 1);
+          }
+        });
+
+        function fetchMessages(msg) {
+          try {
+            let message = "";
+            let stream = new EventSource(
+              "/stream?message=" + msg + "&token=" + usr_token
+            );
+
+            let htmlText;
+            let aswid = "asw" + golab_time;
+            chatbox.append(
+              `<div id="` +
+                aswid +
+                `" class="anmdui-typo mdui-card mdui-p-a-1 markdown-body">A: </div>`
+            );
+
+            stream.addEventListener("message", function (e) {
+              validSpace=(str) =>{
+                for (let i=0;i<str.length;i++){
+                  if (str.charAt(i)==" "){
+                    return true
+                  }
+                }
+                return false
+              }
+              if (validSpace(e.data)){
+                console.log("det space"+e.data)
+              }
+              let rendererMD = new marked.Renderer();
+              message += e.data;
+              marked.setOptions({
+                renderer: rendererMD,
+                gfm: true,
+                tables: true,
+                breaks: false,
+                pedantic: false,
+                sanitize: false,
+                smartLists: true,
+                smartypants: false,
+                highlight: function (code) {
+                  return hljs.highlightAuto(code).value;
+                },
+              });
+
+              $("#" + aswid).html("A: " + marked.parse(message));
+            });
+            stream.addEventListener("stop", function (e) {
+              stream.close();
+              console.log(e);
+              console.log(message)
+              sendButton.val("询问");
+              sendButton.prop("disabled", false);
+              golab_time++;
+            });
+            stream.onerror = function (event) {
+              stream.close();
+              console.log(event);
+              sendButton.val("询问");
+              sendButton.prop("disabled", false);
+              golab_time++;
+            };
+
+            // $.ajax(settings)
+            //   .done(function (response) {
+            //     console.log(response);
+
+            //     const message = response.choices[0].message;
+            //     messages.push({
+            //       role: message.role,
+            //       content: message.content,
+            //     });
+            //   })
+            //   .fail(function (jqXHR, textStatus, errorThrown) {
+            //     sendButton.val("Oops, something went wrong");
+            //     chatbox.append(
+            //       `<p class="errormessage">出错：哎呀, 出现问题了, 可能是官方接口挂了, 具体请查看浏览器日志</p>`
+            //     );
+            //   });
+          } catch (error) {
+            sendButton.val("Oops, something went wrong");
+            chatbox.append(
+              `<p class="errormessage">出错：哎呀, JavaScript代码有问题, 请检查代码</p>`
+            );
+            console.log(error);
+          }
+        }
+      });
+
+      function getUuid() {
+        var len = 32; //32长度
+        var radix = 16; //16进制
+        var chars =
+          "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split(
+            ""
+          );
+        var uuid = [],
+          i;
+        radix = radix || chars.length;
+        if (len) {
+          for (i = 0; i < len; i++)
+            uuid[i] = chars[0 | (Math.random() * radix)];
+        } else {
+          var r;
+          uuid[8] = uuid[13] = uuid[18] = uuid[23] = "-";
+          uuid[14] = "4";
+          for (i = 0; i < 36; i++) {
+            if (!uuid[i]) {
+              r = 0 | (Math.random() * 16);
+              uuid[i] = chars[i == 19 ? (r & 0x3) | 0x8 : r];
+            }
+          }
+        }
+        return uuid.join("");
+      }
+    </script>
+   
+  </body>
+</html>

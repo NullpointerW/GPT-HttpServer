@@ -37,6 +37,6 @@ func process(stream *openai.ChatCompletionStream, streamCh chan string) {
 		}
 		data := response.Choices[0].Delta.Content
 		streamCh <- string(data)
-		fmt.Printf("Stream response: %s\n", data)
+		// fmt.Printf("Stream response: %s\n", data)
 	}
 }
