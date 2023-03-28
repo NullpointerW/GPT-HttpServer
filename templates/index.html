@@ -178,11 +178,14 @@
         function fetchMessages(msg) {
           try {
             let message = "";
-            let stream = new EventSource(
-              "/stream?message=" + msg + "&token=" + usr_token
+            // let stream = new EventSource(
+            //   "/stream?message=" + msg + "&token=" + usr_token
+            // );
+
+            var ws = new WebSocket(
+              "ws://localhost:8080/ws?message=" + msg + "&token=" + usr_token
             );
 
-            let htmlText;
             let aswid = "asw" + golab_time;
             chatbox.append(
               `<div id="` +
@@ -190,20 +193,14 @@
                 `" class="anmdui-typo mdui-card mdui-p-a-1 markdown-body">A: </div>`
             );
 
-            stream.addEventListener("message", function (e) {
-              validSpace=(str) =>{
-                for (let i=0;i<str.length;i++){
-                  if (str.charAt(i)==" "){
-                    return true
-                  }
-                }
-                return false
-              }
-              if (validSpace(e.data)){
-                console.log("det space"+e.data)
-              }
-              let rendererMD = new marked.Renderer();
+            ws.onopen = function () {
+              //当WebSocket创建成功时，触发onopen事件
+              console.log("open");
+              // ws.send("hello"); //将消息发送到服务端
+            };
+            ws.onmessage = function (e) {
               message += e.data;
+              let rendererMD = new marked.Renderer()
               marked.setOptions({
                 renderer: rendererMD,
                 gfm: true,
@@ -217,24 +214,67 @@
                   return hljs.highlightAuto(code).value;
                 },
               });
-
               $("#" + aswid).html("A: " + marked.parse(message));
-            });
-            stream.addEventListener("stop", function (e) {
-              stream.close();
+            };
+            ws.onclose = function (e) {
               console.log(e);
-              console.log(message)
+              console.log(message);
               sendButton.val("询问");
               sendButton.prop("disabled", false);
               golab_time++;
-            });
-            stream.onerror = function (event) {
-              stream.close();
+            };
+            ws.onerror = function (e) {
               console.log(event);
               sendButton.val("询问");
               sendButton.prop("disabled", false);
               golab_time++;
             };
+
+            // stream.addEventListener("message", function (e) {
+            //   validSpace = (str) => {
+            //     for (let i = 0; i < str.length; i++) {
+            //       if (str.charAt(i) == " ") {
+            //         return true;
+            //       }
+            //     }
+            //     return false;
+            //   };
+            //   if (validSpace(e.data)) {
+            //     console.log("det space" + e.data);
+            //   }
+            //   let rendererMD = new marked.Renderer();
+            //   message += e.data;
+            //   marked.setOptions({
+            //     renderer: rendererMD,
+            //     gfm: true,
+            //     tables: true,
+            //     breaks: false,
+            //     pedantic: false,
+            //     sanitize: false,
+            //     smartLists: true,
+            //     smartypants: false,
+            //     highlight: function (code) {
+            //       return hljs.highlightAuto(code).value;
+            //     },
+            //   });
+
+            //   $("#" + aswid).html("A: " + marked.parse(message));
+            // });
+            // stream.addEventListener("stop", function (e) {
+            //   stream.close();
+            //   console.log(e);
+            //   console.log(message);
+            //   sendButton.val("询问");
+            //   sendButton.prop("disabled", false);
+            //   golab_time++;
+            // });
+            // stream.onerror = function (event) {
+            //   stream.close();
+            //   console.log(event);
+            //   sendButton.val("询问");
+            //   sendButton.prop("disabled", false);
+            //   golab_time++;
+            // };
 
             // $.ajax(settings)
             //   .done(function (response) {
@@ -289,6 +329,5 @@
         return uuid.join("");
       }
     </script>
-   
   </body>
 </html>
