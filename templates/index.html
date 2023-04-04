@@ -101,9 +101,9 @@
     <!-- 头部展示 -->
     <div
       class="mdui-appbar mdui-appbar-fixed mdui-valign"
-      style="background-color: #1e3b7a"
+      style="background-color: #0d1117"
     >
-      <h1 class="mdui-center" style="color: #fff">Chatgpt</h1>
+      <h1 class="mdui-center" style="color: #fff">ChatGPT</h1>
     </div>
     <!-- 对话展示 -->
     <div class="mdui-container">
@@ -144,6 +144,8 @@
       const sendButton = $("#sendButton");
       var golab_time = 0;
       const usr_token = getUuid();
+      var enterAble = true;
+      var wheelAble =true
 
       $(document).ready(function () {
         const messages = [];
@@ -160,6 +162,7 @@
             userInput.val("");
             sendButton.val("询问中...");
             sendButton.prop("disabled", true);
+            enterAble=false
             fetchMessages(message);
           }
         });
@@ -168,7 +171,9 @@
           if (event.keyCode === 13 && !event.ctrlKey && !event.shiftKey) {
             // Enter key without Ctrl key
             event.preventDefault();
-            sendButton.click();
+            if (enterAble){
+              sendButton.click();
+            }
           } else if (
             event.keyCode === 13 &&
             (event.ctrlKey || event.shiftKey)
@@ -188,7 +193,12 @@
           }
         });
 
+        window.addEventListener('wheel', function(event) {
+           wheelAble=false
+        });
+
         function fetchMessages(msg) {
+          wheelAble=true
           try {
             let message = "";
             // let stream = new EventSource(
@@ -229,83 +239,27 @@
               });
               $("#" + aswid).html("A: " + marked.parse(message));
               MathJax.typeset();
+              if (wheelAble){
+                window.scrollTo(0,document.body.scrollHeight);
+              }
+             
             };
             ws.onclose = function (e) {
               console.log(e);
               console.log(message);
               sendButton.val("询问");
               sendButton.prop("disabled", false);
+              enterAble=true
               golab_time++;
+              wheelAble=true
             };
             ws.onerror = function (e) {
               console.log(event);
               sendButton.val("询问");
               sendButton.prop("disabled", false);
+              enterAble=true
               golab_time++;
             };
-
-            // stream.addEventListener("message", function (e) {
-            //   validSpace = (str) => {
-            //     for (let i = 0; i < str.length; i++) {
-            //       if (str.charAt(i) == " ") {
-            //         return true;
-            //       }
-            //     }
-            //     return false;
-            //   };
-            //   if (validSpace(e.data)) {
-            //     console.log("det space" + e.data);
-            //   }
-            //   let rendererMD = new marked.Renderer();
-            //   message += e.data;
-            //   marked.setOptions({
-            //     renderer: rendererMD,
-            //     gfm: true,
-            //     tables: true,
-            //     breaks: false,
-            //     pedantic: false,
-            //     sanitize: false,
-            //     smartLists: true,
-            //     smartypants: false,
-            //     highlight: function (code) {
-            //       return hljs.highlightAuto(code).value;
-            //     },
-            //   });
-
-            //   $("#" + aswid).html("A: " + marked.parse(message));
-            // });
-            // stream.addEventListener("stop", function (e) {
-            //   stream.close();
-            //   console.log(e);
-            //   console.log(message);
-            //   sendButton.val("询问");
-            //   sendButton.prop("disabled", false);
-            //   golab_time++;
-            // });
-            // stream.onerror = function (event) {
-            //   stream.close();
-            //   console.log(event);
-            //   sendButton.val("询问");
-            //   sendButton.prop("disabled", false);
-            //   golab_time++;
-            // };
-
-            // $.ajax(settings)
-            //   .done(function (response) {
-            //     console.log(response);
-
-            //     const message = response.choices[0].message;
-            //     messages.push({
-            //       role: message.role,
-            //       content: message.content,
-            //     });
-            //   })
-            //   .fail(function (jqXHR, textStatus, errorThrown) {
-            //     sendButton.val("Oops, something went wrong");
-            //     chatbox.append(
-            //       `<p class="errormessage">出错：哎呀, 出现问题了, 可能是官方接口挂了, 具体请查看浏览器日志</p>`
-            //     );
-            //   });
           } catch (error) {
             sendButton.val("Oops, something went wrong");
             chatbox.append(
