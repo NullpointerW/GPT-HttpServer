@@ -62,10 +62,10 @@ func CreateFineTune(qas []QA, uid, name string) error {
 
 func FineTuneProcess(file *os.File, uid, name string, reload bool, reLocFTId string) {
 	var (
-		ctx                = context.Background()
-		cli                = gptcli.Cli()
-		fineTuningJob      = openai.FineTuningJob{}
-		marshal            []byte
+		ctx           = context.Background()
+		cli           = gptcli.Cli()
+		fineTuningJob = openai.FineTuningJob{}
+		//marshal            []byte
 		localizeFineTuneId string
 		ftMode             = FineTuneModel{}
 		openaiFile         = openai.File{}
@@ -73,13 +73,18 @@ func FineTuneProcess(file *os.File, uid, name string, reload bool, reLocFTId str
 	)
 	if reload {
 		localizeFineTuneId = reLocFTId
-		get := cache.Redis.HGet(uid, localizeFineTuneId)
-		marshal, err = get.Bytes()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		err = json.Unmarshal(marshal, &ftMode)
+		//get := cache.redisCli.HGet(uid, localizeFineTuneId)
+		//marshal, err = get.Bytes()
+		//if err != nil {
+		//	fmt.Println(err)
+		//	return
+		//}
+		//err = json.Unmarshal(marshal, &ftMode)
+		//if err != nil {
+		//	fmt.Println(err)
+		//	return
+		//}
+		err := cache.HGet(uid, localizeFineTuneId, &ftMode)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -116,20 +121,22 @@ func FineTuneProcess(file *os.File, uid, name string, reload bool, reLocFTId str
 	ftMode = FineTuneModel{OpenaiFileId: openaiFile.ID,
 		FileUpLoadDone: openaiFile.Status == "processed",
 		Name:           name}
-	marshal, _ = json.Marshal(ftMode)
-	cache.Redis.HSet(uid, localizeFineTuneId, marshal)
+	//marshal, _ = json.Marshal(ftMode)
+	_ = cache.HSet(uid, localizeFineTuneId, ftMode)
+	//cache.redisCli.HSet(uid, localizeFineTuneId, marshal)
 uploadFile:
 	if openaiFile.Status != "processed" {
 		for {
 			openaiFile, _ = cli.GetFile(ctx, ftMode.OpenaiFileId)
 			if openaiFile.Status == "processed" {
 				ftMode.FileUpLoadDone = true
-				marshal, err := json.Marshal(ftMode)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-				cache.Redis.HSet(uid, localizeFineTuneId, marshal)
+				//marshal, err := json.Marshal(ftMode)
+				//if err != nil {
+				//	fmt.Println(err)
+				//	return
+				//}
+				//cache.redisCli.HSet(uid, localizeFineTuneId, marshal)
+				_ = cache.HSet(uid, localizeFineTuneId, ftMode)
 				fmt.Println("ft-model-id(local)", localizeFineTuneId, "openai-file-id", openaiFile.ID, "upload ok!")
 				break
 			}
@@ -149,12 +156,13 @@ uploadFile:
 	ftMode.FineTuneJobId = fineTuningJob.ID
 	ftMode.Done = fineTuningJob.Status == "succeeded"
 	ftMode.Model = fineTuningJob.FineTunedModel
-	marshal, err = json.Marshal(ftMode)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	cache.Redis.HSet(uid, localizeFineTuneId, marshal)
+	//marshal, err = json.Marshal(ftMode)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//cache.redisCli.HSet(uid, localizeFineTuneId, marshal)
+	_ = cache.HSet(uid, localizeFineTuneId, ftMode)
 fineTuneTask:
 	if fineTuningJob.Status != "succeeded" {
 		for {
@@ -166,12 +174,13 @@ fineTuneTask:
 			if fineTuningJob.Status == "succeeded" {
 				ftMode.Done = true
 				ftMode.Model = fineTuningJob.FineTunedModel
-				marshal, err := json.Marshal(ftMode)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-				cache.Redis.HSet(uid, localizeFineTuneId, marshal)
+				//marshal, err := json.Marshal(ftMode)
+				//if err != nil {
+				//	fmt.Println(err)
+				//	return
+				//}
+				//cache.redisCli.HSet(uid, localizeFineTuneId, marshal)
+				_ = cache.HSet(uid, localizeFineTuneId, ftMode)
 				fmt.Println("fineTuneJob is done ,goroutine exited")
 				break
 			}
