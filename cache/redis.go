@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"github.com/go-redis/redis"
 	"gpt3.5/cfg"
 )
@@ -19,4 +20,5 @@ func init() {
 	if err != nil {
 		panic("redis connect fail: " + err.Error())
 	}
+	fmt.Println("redis connected!")
 }

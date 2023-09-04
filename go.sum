@@ -1,5 +1,7 @@
 github.com/NullpointerW/go-openai v0.0.0-20230904053816-4f0edf0131da h1:oHtdhr2dtsCp4pbuWKf2oMi3kJGGThDauVE0VdwhZew=
 github.com/NullpointerW/go-openai v0.0.0-20230904053816-4f0edf0131da/go.mod h1:fDyZVduC0fC3WfTNjy+nTPrTh8DAc20cVkKfq6EXdB8=
+github.com/NullpointerW/go-openai v1.15.3 h1:gg7s0POF+wkqF+/5TiABCKrRkODtJp2wFK6Koaz6npg=
+github.com/NullpointerW/go-openai v1.15.3/go.mod h1:fDyZVduC0fC3WfTNjy+nTPrTh8DAc20cVkKfq6EXdB8=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=
 github.com/bytedance/sonic v1.8.0 h1:ea0Xadu+sHlu7x5O3gKhRpQ1IKiMrSiHttPF0ybECuA=
 github.com/bytedance/sonic v1.8.0/go.mod h1:i736AoUSYt75HyZLoJW9ERYxcy6eaN6h4BZXU064P/U=

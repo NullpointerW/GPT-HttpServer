@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	_ "gpt3.5/cache"
 	"gpt3.5/cfg"
 	gptHttp "gpt3.5/http"
 	"log"
@@ -15,7 +16,7 @@ import (
 
 func main() {
 	log.Printf("http service listens on port [%d]", cfg.Cfg.Port)
-    ginSrv(strconv.Itoa(cfg.Cfg.Port))
+	ginSrv(strconv.Itoa(cfg.Cfg.Port))
 	// mux := http.NewServeMux()
 	// mux.Handle("/v1/chat/do", http.HandlerFunc(gptHttp.Do))
 	// mux.Handle("/cfg/modifyKey", http.HandlerFunc(gptHttp.SwitchApikey))
@@ -26,7 +27,7 @@ func ginSrv(port string) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gptHttp.SetupRouter()
 	srv := &http.Server{
-		Addr:    ":"+port,
+		Addr:    ":" + port,
 		Handler: router,
 	}
 	go func() {

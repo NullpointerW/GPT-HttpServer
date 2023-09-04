@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"testing"
-
-	"github.com/sashabaranov/go-openai"
+	"github.com/NullpointerW/go-openai"
 	"gpt3.5/gptcli"
+	"testing"
 )
 
 func TestApi(t *testing.T) {
