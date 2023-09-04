@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"github.com/NullpointerW/go-openai"
+
 	// "errors"
 	"fmt"
 	"github.com/gin-gonic/gin"

@@ -18,6 +18,8 @@ type Config struct {
 	CharacterSetting string `json:"characterSetting"`
 	TokenTTL         int    `json:"tokenTTL"`
 	SecretKey        string `json:"secretKey"`
+	RedisAddr        string `json:"redis_addr"`
+	RedisPasswd      string `json:"redis_passwd"`
 }
 
 func (cfg Config) GoString() string {
