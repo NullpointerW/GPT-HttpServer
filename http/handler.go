@@ -21,7 +21,7 @@ type request struct {
 }
 
 type FineTunesRequest struct {
-	Model   string `json:"token" uri:"token" form:"token"`
+	Model   string `json:"model" uri:"model" form:"model"`
 	Message string `json:"message"  uri:"token" form:"message"`
 }
 

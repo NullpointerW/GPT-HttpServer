@@ -150,12 +150,13 @@ func SetupRouter() *gin.Engine {
 
 			if v, exist := gptcli.FineTunesManager.Load(reqParam.Model); exist {
 				t := v.(*gptcli.PromptContext)
+				fmt.Println(t)
 				tCtx := append(t.Context, openai.ChatCompletionMessage{
 					Role:    openai.ChatMessageRoleUser,
 					Content: reqParam.Message,
 				})
 				req = openai.ChatCompletionRequest{
-					Model:    openai.GPT3Dot5Turbo,
+					Model:    reqParam.Model,
 					Messages: tCtx,
 				}
 				if ok, asw, err := WSProcess(ws, req); err != nil {
@@ -188,7 +189,7 @@ func SetupRouter() *gin.Engine {
 					log.Println(err)
 				} else if ok {
 					newCtx = append(newCtx, asw)
-					gptcli.TokenManager.Store(reqParam.Model, &gptcli.PromptContext{
+					gptcli.FineTunesManager.Store(reqParam.Model, &gptcli.PromptContext{
 						Context:  newCtx,
 						LastTime: time.Now(),
 					})
