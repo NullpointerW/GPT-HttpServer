@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	// github.com/NullpointerW/golwpush v0.0.1-demo
-	github.com/sashabaranov/go-openai v1.15.1
+	github.com/NullpointerW/go-openai v0.0.0-20230904053816-4f0edf0131da
 	github.com/satori/go.uuid v1.2.0
 )
 

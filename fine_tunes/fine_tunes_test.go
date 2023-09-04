@@ -2,6 +2,8 @@ package fine_tunes
 
 import (
 	"bytes"
+	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"os"
 	"testing"
 )
@@ -52,4 +54,8 @@ func TestQA_BuildJson2(t *testing.T) {
 		}
 	}
 
+}
+
+func TestCreateFineTune(t *testing.T) {
+	fmt.Print(uuid.NewV4().String())
 }

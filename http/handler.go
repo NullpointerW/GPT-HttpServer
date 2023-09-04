@@ -11,7 +11,6 @@ import (
 
 	"gpt3.5/cfg"
 
-	"github.com/sashabaranov/go-openai"
 	uuid "github.com/satori/go.uuid"
 	"gpt3.5/gptcli"
 )

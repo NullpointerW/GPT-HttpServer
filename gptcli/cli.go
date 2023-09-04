@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sashabaranov/go-openai"
+	"github.com/NullpointerW/go-openai"
 )
 
 type Token struct {

@@ -10,8 +10,7 @@ import (
 	"log"
 	"net/http"
 	"time"
-	// "github.com/go-playground/locales/lg"
-	"github.com/sashabaranov/go-openai"
+
 	uuid "github.com/satori/go.uuid"
 	"gpt3.5/cfg"
 	"gpt3.5/gptcli"

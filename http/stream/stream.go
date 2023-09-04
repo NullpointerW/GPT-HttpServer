@@ -3,9 +3,8 @@ package stream
 import (
 	"errors"
 	"fmt"
+	"github.com/NullpointerW/go-openai"
 	"io"
-
-	"github.com/sashabaranov/go-openai"
 )
 
 func StreamRequest(st *openai.ChatCompletionStream) chan string {
