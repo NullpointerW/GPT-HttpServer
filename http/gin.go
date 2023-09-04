@@ -48,8 +48,8 @@ func SetupRouter() *gin.Engine {
 			fmt.Printf("reqpram is%#v \n", reqParam)
 
 			if reqParam.Token == "" {
-				//为了逐字显示
-				msg := "未获取到token,请检查token设置!"
+				//In order to display word by word
+				msg := "PromptContext not obtained, please check the token settings!"
 				for _, ruc := range msg {
 					time.Sleep(100 * time.Nanosecond)
 					ws.WriteMessage(websocket.TextMessage, []byte(string(ruc)))
@@ -63,7 +63,7 @@ func SetupRouter() *gin.Engine {
 			var req openai.ChatCompletionRequest
 
 			if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
-				t := v.(*gptcli.Token)
+				t := v.(*gptcli.PromptContext)
 				// fmt.Printf("token is %+v", t)
 				tCtx := append(t.Context, openai.ChatCompletionMessage{
 					Role:    openai.ChatMessageRoleUser,
@@ -103,7 +103,7 @@ func SetupRouter() *gin.Engine {
 					log.Println(err)
 				} else if ok {
 					newCtx = append(newCtx, asw)
-					gptcli.TokenManager.Store(reqParam.Token, &gptcli.Token{
+					gptcli.TokenManager.Store(reqParam.Token, &gptcli.PromptContext{
 						Context:  newCtx,
 						LastTime: time.Now(),
 					})
@@ -125,7 +125,7 @@ func SetupRouter() *gin.Engine {
 		}
 
 		go func() {
-			var reqParam request
+			var reqParam FineTunesRequest
 			err = c.ShouldBindQuery(&reqParam)
 			if err != nil {
 				log.Println(err.Error())
@@ -134,9 +134,8 @@ func SetupRouter() *gin.Engine {
 
 			fmt.Printf("reqpram is%#v \n", reqParam)
 
-			if reqParam.Token == "" {
-				//为了逐字显示
-				msg := "未获取到token,请检查token设置!"
+			if reqParam.Model == "" {
+				msg := "Model not obtained!"
 				for _, ruc := range msg {
 					time.Sleep(100 * time.Nanosecond)
 					ws.WriteMessage(websocket.TextMessage, []byte(string(ruc)))
@@ -149,9 +148,8 @@ func SetupRouter() *gin.Engine {
 
 			var req openai.ChatCompletionRequest
 
-			if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
-				t := v.(*gptcli.Token)
-				// fmt.Printf("token is %+v", t)
+			if v, exist := gptcli.FineTunesManager.Load(reqParam.Model); exist {
+				t := v.(*gptcli.PromptContext)
 				tCtx := append(t.Context, openai.ChatCompletionMessage{
 					Role:    openai.ChatMessageRoleUser,
 					Content: reqParam.Message,
@@ -182,7 +180,7 @@ func SetupRouter() *gin.Engine {
 					},
 				}
 				req = openai.ChatCompletionRequest{
-					Model: "ft:gpt-3.5-turbo-0613:personal::7qd0bfej",
+					Model: reqParam.Model,
 					//token
 					Messages: newCtx,
 				}
@@ -190,7 +188,7 @@ func SetupRouter() *gin.Engine {
 					log.Println(err)
 				} else if ok {
 					newCtx = append(newCtx, asw)
-					gptcli.TokenManager.Store(reqParam.Token, &gptcli.Token{
+					gptcli.TokenManager.Store(reqParam.Model, &gptcli.PromptContext{
 						Context:  newCtx,
 						LastTime: time.Now(),
 					})
@@ -199,7 +197,6 @@ func SetupRouter() *gin.Engine {
 				}
 			}
 		}()
-		// go  gptws.HandleWs(ws)
 
 	})
 
@@ -238,7 +235,7 @@ func SetupRouter() *gin.Engine {
 				Role:    openai.ChatMessageRoleAssistant,
 				Content: resp.Choices[0].Message.Content,
 			})
-			gptcli.TokenManager.Store(uuidTk, &gptcli.Token{
+			gptcli.TokenManager.Store(uuidTk, &gptcli.PromptContext{
 				Context:  apiParam,
 				LastTime: time.Now(),
 			})
@@ -249,7 +246,7 @@ func SetupRouter() *gin.Engine {
 			c.JSON(200, httpResp)
 		} else {
 			if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
-				t := v.(*gptcli.Token)
+				t := v.(*gptcli.PromptContext)
 				// fmt.Printf("token is %+v", t)
 				tCtx := append(t.Context, openai.ChatCompletionMessage{
 					Role:    openai.ChatMessageRoleUser,
@@ -328,7 +325,7 @@ func SetupRouter() *gin.Engine {
 		var req openai.ChatCompletionRequest
 
 		if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
-			t := v.(*gptcli.Token)
+			t := v.(*gptcli.PromptContext)
 			// fmt.Printf("token is %+v", t)
 			tCtx := append(t.Context, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleUser,
@@ -368,7 +365,7 @@ func SetupRouter() *gin.Engine {
 				log.Println(err)
 			} else if ok {
 				newCtx = append(newCtx, asw)
-				gptcli.TokenManager.Store(reqParam.Token, &gptcli.Token{
+				gptcli.TokenManager.Store(reqParam.Token, &gptcli.PromptContext{
 					Context:  newCtx,
 					LastTime: time.Now(),
 				})

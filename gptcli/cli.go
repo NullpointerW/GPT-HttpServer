@@ -12,42 +12,25 @@ import (
 	"github.com/NullpointerW/go-openai"
 )
 
-type Token struct {
+type PromptContext struct {
 	Context  []openai.ChatCompletionMessage
 	LastTime time.Time
 }
 
 var (
-	client       = newCli()
-	TokenManager = sync.Map{}
+	client           = newCli()
+	TokenManager     = sync.Map{}
+	FineTunesManager = sync.Map{}
 )
 
 func Cli() *openai.Client {
 	return client.Load()
 }
 
-func tokensCleaner(d time.Duration) {
-sleep:
-	for {
-		time.Sleep(d)
-		goto clean
-	}
-clean:
-	log.Println("token cleaner start")
-	its := func(k, v interface{}) bool {
-		tk := v.(*Token)
-		if time.Since(tk.LastTime) >= d {
-			TokenManager.Delete(k)
-			log.Printf("clean token %s", k.(string))
-		}
-		return true
-	}
-	TokenManager.Range(its)
-	goto sleep
-}
 func init() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Lmicroseconds)
 	go tokensCleaner(time.Second * time.Duration(cfg.Cfg.TokenTTL))
+	go fineTunesCleaner(time.Hour * 24 * 2) // 2 days
 }
 
 func newCli() *atomic.Pointer[openai.Client] {

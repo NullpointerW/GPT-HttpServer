@@ -2,8 +2,6 @@ package fine_tunes
 
 import (
 	"bytes"
-	"fmt"
-	uuid "github.com/satori/go.uuid"
 	"os"
 	"testing"
 )
@@ -57,5 +55,6 @@ func TestQA_BuildJson2(t *testing.T) {
 }
 
 func TestCreateFineTune(t *testing.T) {
-	fmt.Print(uuid.NewV4().String())
+	qas := []QA{{"he", "w"}, {"he", "w"}, {"he", "wwa12w"}, {"w", "y"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}}
+	CreateFineTune(qas, "wkc", "mytest-model")
 }

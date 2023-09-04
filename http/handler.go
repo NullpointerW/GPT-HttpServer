@@ -20,6 +20,11 @@ type request struct {
 	Message string `json:"message"  uri:"token" form:"message"`
 }
 
+type FineTunesRequest struct {
+	Model   string `json:"token" uri:"token" form:"token"`
+	Message string `json:"message"  uri:"token" form:"message"`
+}
+
 type response struct {
 	TokenRequire string `json:"tokenRequire,omitempty"`
 	Asw          string `json:"asw,omitempty"`
@@ -72,7 +77,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 			Role:    openai.ChatMessageRoleAssistant,
 			Content: resp.Choices[0].Message.Content,
 		})
-		gptcli.TokenManager.Store(uuidTk, &gptcli.Token{
+		gptcli.TokenManager.Store(uuidTk, &gptcli.PromptContext{
 			Context:  apiParam,
 			LastTime: time.Now(),
 		})
@@ -87,7 +92,7 @@ func Do(w http.ResponseWriter, req *http.Request) {
 
 	} else {
 		if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
-			t := v.(*gptcli.Token)
+			t := v.(*gptcli.PromptContext)
 			// fmt.Printf("token is %+v", t)
 			tCtx := append(t.Context, openai.ChatCompletionMessage{
 				Role:    openai.ChatMessageRoleUser,
