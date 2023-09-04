@@ -9,3 +9,4 @@ RUN go build -o gpt3.5 ./gptcli.go
 EXPOSE 8080
 
 CMD ["/opt/gpt3.5"]
+

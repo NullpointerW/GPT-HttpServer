@@ -115,6 +115,93 @@ func SetupRouter() *gin.Engine {
 
 	})
 
+	r.GET("/tfws", func(c *gin.Context) {
+		ws, err := gptws.Upgrader.Upgrade(c.Writer, c.Request, nil)
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		go func() {
+			var reqParam request
+			err = c.ShouldBindQuery(&reqParam)
+			if err != nil {
+				log.Println(err.Error())
+				return
+			}
+
+			fmt.Printf("reqpram is%#v \n", reqParam)
+
+			if reqParam.Token == "" {
+				//为了逐字显示
+				msg := "未获取到token,请检查token设置!"
+				for _, ruc := range msg {
+					time.Sleep(100 * time.Nanosecond)
+					ws.WriteMessage(websocket.TextMessage, []byte(string(ruc)))
+				}
+				if err = ws.Close(); err != nil {
+					fmt.Printf("close ws_conn err:%v \n", err)
+				}
+				return
+			}
+
+			var req openai.ChatCompletionRequest
+
+			if v, exist := gptcli.TokenManager.Load(reqParam.Token); exist {
+				t := v.(*gptcli.Token)
+				// fmt.Printf("token is %+v", t)
+				tCtx := append(t.Context, openai.ChatCompletionMessage{
+					Role:    openai.ChatMessageRoleUser,
+					Content: reqParam.Message,
+				})
+				req = openai.ChatCompletionRequest{
+					Model:    openai.GPT3Dot5Turbo,
+					Messages: tCtx,
+				}
+				if ok, asw, err := WSProcess(ws, req); err != nil {
+					log.Println(err)
+				} else if ok {
+					tCtx = append(tCtx, asw)
+					t.Context = tCtx
+					t.LastTime = time.Now()
+				} else {
+					log.Printf("send err :%#+v", reqParam)
+				}
+			} else { //not exist
+
+				newCtx := []openai.ChatCompletionMessage{
+					{
+						Role:    openai.ChatMessageRoleSystem,
+						Content: cfg.Cfg.CharacterSetting,
+					},
+					{
+						Role:    openai.ChatMessageRoleUser,
+						Content: reqParam.Message,
+					},
+				}
+				req = openai.ChatCompletionRequest{
+					Model: "ft:gpt-3.5-turbo-0613:personal::7qd0bfej",
+					//token
+					Messages: newCtx,
+				}
+				if ok, asw, err := WSProcess(ws, req); err != nil {
+					log.Println(err)
+				} else if ok {
+					newCtx = append(newCtx, asw)
+					gptcli.TokenManager.Store(reqParam.Token, &gptcli.Token{
+						Context:  newCtx,
+						LastTime: time.Now(),
+					})
+				} else {
+					log.Printf("send err :%#+v", reqParam)
+				}
+			}
+		}()
+		// go  gptws.HandleWs(ws)
+
+	})
+
 	r.POST("/v1/chat/do", func(c *gin.Context) {
 		var reqParam request
 		if err := c.ShouldBindJSON(&reqParam); err != nil {
