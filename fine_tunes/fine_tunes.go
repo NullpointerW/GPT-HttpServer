@@ -23,7 +23,6 @@ type FineTuneModel struct {
 	Name           string `json:"name"`
 	OpenaiFileId   string `json:"OpenaiFileId"` // random gen uuid
 	FineTuneJobId  string `json:"fineTuneJobId"`
-	FileId         string `json:"fileId"`
 	Done           bool   `json:"done"`
 	Model          string `json:"model"`
 	FileUpLoadDone bool   `json:"fileUpLoadDone"`
