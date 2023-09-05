@@ -1,4 +1,4 @@
 # GPT-HttpServer
 *  ChatCompletionMessage
 *  ChatCompletionMessageStream (websocket)
-*  finetunesJob
+*  fine-tunesJob
