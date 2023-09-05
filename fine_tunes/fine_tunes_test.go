@@ -2,6 +2,7 @@ package fine_tunes
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -55,6 +56,16 @@ func TestQA_BuildJson2(t *testing.T) {
 }
 
 func TestCreateFineTune(t *testing.T) {
-	qas := []QA{{"he", "w"}, {"he", "w"}, {"he", "wwa12w"}, {"w", "y"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}}
+	qas := []QA{{"chong", "wong"}, {"he", "w"}, {"he", "wwa12w"}, {"w", "y"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}, {"he", "w"}}
 	CreateFineTune(qas, "wkc", "mytest-model")
+}
+
+func TestFinTuneList(t *testing.T) {
+	list, err := FinTuneList("wkc")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(list)
+
 }

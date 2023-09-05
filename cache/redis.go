@@ -48,3 +48,11 @@ func HGet(key, hKey string, v any) error {
 	}
 	return nil
 }
+
+func HGetAll(key string) (map[string]string, error) {
+	return redisCli.HGetAll(key).Val(), redisCli.HGetAll(key).Err()
+}
+
+func Keys() []string {
+	return redisCli.Keys("*").Val()
+}

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"github.com/NullpointerW/go-openai"
+	"gpt3.5/fine_tunes"
 
 	// "errors"
 	"fmt"
@@ -19,6 +20,12 @@ import (
 	gptstream "gpt3.5/http/stream"
 	gptws "gpt3.5/ws"
 )
+
+type FineTuneRequest struct {
+	QAs  []fine_tunes.QA `json:"qas"`
+	Uid  string          `json:"uid"`
+	Name string          `json:"name"`
+}
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
@@ -277,12 +284,36 @@ func SetupRouter() *gin.Engine {
 				// fmt.Printf("%+v",resp)
 				c.JSON(200, httpResp)
 			} else {
-				//token 不存在
+				//token not existed
 				log.Println("invalid token")
 				sErr := fmt.Sprintf("invalid token:\"%s\"", reqParam.Token)
 				c.JSON(401, response{Err: sErr, ErrCode: "401"})
 			}
 		}
+	})
+
+	r.POST("/v2/ft/new", func(c *gin.Context) {
+		var ftReq FineTuneRequest
+		if err := c.ShouldBindJSON(&ftReq); err != nil {
+			c.String(500, err.Error())
+			return
+		}
+		err := fine_tunes.CreateFineTune(ftReq.QAs, ftReq.Uid, ftReq.Name)
+		if err != nil {
+			c.String(500, err.Error())
+			return
+		}
+		c.String(200, "ok")
+	})
+
+	r.GET("/v2/ft/ls", func(c *gin.Context) {
+		uid := c.Query("uid")
+		jsons, err := fine_tunes.FinTuneList(uid)
+		if err != nil {
+			c.String(500, err.Error())
+			return
+		}
+		c.JSON(200, jsons)
 	})
 
 	r.GET("/cfg/modkey", func(c *gin.Context) {

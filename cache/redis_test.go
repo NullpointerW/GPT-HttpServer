@@ -29,3 +29,7 @@ func TestHGet(t *testing.T) {
 	}
 	fmt.Printf("%+v ?", a)
 }
+
+func TestKeys(t *testing.T) {
+	fmt.Println(Keys())
+}
