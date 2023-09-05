@@ -11,8 +11,8 @@ import (
 
 	"github.com/NullpointerW/go-openai"
 	uuid "github.com/satori/go.uuid"
-	"gpt3.5/cfg"
-	"gpt3.5/gptcli"
+	"gpt-http/cfg"
+	"gpt-http/gptcli"
 )
 
 type request struct {

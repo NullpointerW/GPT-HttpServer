@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
-	"gpt3.5/cfg"
+	"gpt-http/cfg"
 )
 
 var (

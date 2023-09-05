@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	_ "gpt3.5/cache"
-	"gpt3.5/cfg"
-	gptHttp "gpt3.5/http"
+	_ "gpt-http/cache"
+	"gpt-http/cfg"
+	gptHttp "gpt-http/http"
 	"log"
 	"net/http"
 	"os"

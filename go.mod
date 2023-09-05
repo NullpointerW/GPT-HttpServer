@@ -1,4 +1,4 @@
-module gpt3.5
+module gpt-http
 
 go 1.19
 

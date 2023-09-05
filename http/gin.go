@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 	"github.com/NullpointerW/go-openai"
-	"gpt3.5/fine_tunes"
+	"gpt-http/fine_tunes"
 
 	// "errors"
 	"fmt"
@@ -15,10 +15,10 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
-	"gpt3.5/cfg"
-	"gpt3.5/gptcli"
-	gptstream "gpt3.5/http/stream"
-	gptws "gpt3.5/ws"
+	"gpt-http/cfg"
+	"gpt-http/gptcli"
+	gptstream "gpt-http/http/stream"
+	gptws "gpt-http/ws"
 )
 
 type FineTuneRequest struct {

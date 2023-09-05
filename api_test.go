@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/NullpointerW/go-openai"
-	"gpt3.5/gptcli"
+	"gpt-http/gptcli"
 	"testing"
 )
 

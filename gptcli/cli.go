@@ -1,7 +1,7 @@
 package gptcli
 
 import (
-	"gpt3.5/cfg"
+	"gpt-http/cfg"
 	"log"
 	"net/http"
 	"net/url"
